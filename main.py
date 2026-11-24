@@ -1,56 +1,60 @@
 #!/usr/bin/env python3
-"""news-image-20261123 entry.
+"""news-image-20261123: a one-picture summary of Monday 23 November 2026.
 
-Writes the pre-built 2D front-page image (entry.png, in the repo root)
-to /output/entry.png, byte-for-byte, with no network access.
+The finished front page lives in this repository as entry.png. This
+program places an exact copy at /output/entry.png and checks the copy
+before it exits: PNG magic, 1024 x 1024 pixels, at most one mebibyte.
 
-The image sums up Monday 23 November 2026 world news in one picture:
+The five panels:
   1. Huang returns as Nvidia CEO, shares jump 31%
   2. Sea drones sink Russian warship in Libya
   3. COP31 ends with no climate deal
   4. Russian strike on Dymer kills 11
   5. Democrats win 258 House seats, most since 1992
 
-Deterministic: the same input bytes always produce the same output bytes.
+It reads nothing from the network and re-encodes nothing, so every run
+writes the same bytes.
 """
 
-import os
 import shutil
+import struct
 import sys
+from pathlib import Path
+
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+MAX_BYTES = 1024 * 1024
+SIDE = 1024
+
+
+def validate(path: Path) -> tuple[int, int, int]:
+    """Return (size, width, height); raise ValueError if the file is not a valid entry."""
+    raw = path.read_bytes()
+    if len(raw) > MAX_BYTES:
+        raise ValueError(f"too large: {len(raw)} bytes (limit {MAX_BYTES})")
+    if not raw.startswith(PNG_MAGIC):
+        raise ValueError("not a PNG file")
+    width, height = struct.unpack(">II", raw[16:24])
+    if (width, height) != (SIDE, SIDE):
+        raise ValueError(f"wrong size: {width}x{height} (want {SIDE}x{SIDE})")
+    return len(raw), width, height
 
 
 def main() -> int:
-    repo_root = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(repo_root, "entry.png")
-    out_dir = "/output"
-    dst = os.path.join(out_dir, "entry.png")
-
-    if not os.path.isfile(src):
-        print(f"missing input: {src}", file=sys.stderr)
+    source = Path(__file__).resolve().parent / "entry.png"
+    target = Path("/output/entry.png")
+    try:
+        if not source.is_file():
+            print(f"error: missing input: {source}", file=sys.stderr)
+            return 1
+        target.parent.mkdir(parents=True, exist_ok=True)
+        # Fail fast on a bad source instead of copying it first.
+        validate(source)
+        shutil.copyfile(source, target)
+        size, width, height = validate(target)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 1
-
-    os.makedirs(out_dir, exist_ok=True)
-    # The copy is byte-for-byte (no re-encoding), so two runs write identical bytes.
-    shutil.copyfile(src, dst)
-
-    # Validate the deliverable before finishing: PNG, 1024x1024, <= 1 MiB.
-    size = os.path.getsize(dst)
-    if size > 1024 * 1024:
-        print(f"output too large: {size} bytes", file=sys.stderr)
-        return 1
-    with open(dst, "rb") as f:
-        header = f.read(33)
-    if not header.startswith(b"\x89PNG\r\n\x1a\n"):
-        print("output is not a PNG", file=sys.stderr)
-        return 1
-    # PNG IHDR: width and height are bytes 16..24 (big-endian uint32s).
-    width = int.from_bytes(header[16:20], "big")
-    height = int.from_bytes(header[20:24], "big")
-    if (width, height) != (1024, 1024):
-        print(f"unexpected dimensions: {width}x{height}", file=sys.stderr)
-        return 1
-
-    print(f"wrote {dst} ({size} bytes, {width}x{height})")
+    print(f"wrote {target}: {size} bytes, {width}x{height} PNG")
     return 0
 
 

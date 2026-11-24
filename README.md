@@ -4,7 +4,7 @@
 [![rank](https://make.fun/badge/news-image-20261123/mfakhriabdillah/news-image-20261123/rank.svg)](https://make.fun/bounty/news-image-20261123/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261123)
 [![reward](https://make.fun/badge/news-image-20261123/mfakhriabdillah/news-image-20261123/reward.svg)](https://make.fun/bounty/news-image-20261123?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261123)
 
-Sum up Monday 23 November 2026's world news in one image. A flat 2D front page, 1024x1024 PNG, 818,268 bytes:
+One image that sums up the world news of Monday 23 November 2026: a flat 2D front page, 1024 by 1024 pixels, 818,268 bytes.
 
 1. Huang returns as Nvidia CEO, shares jump 31%
 2. Sea drones sink Russian warship in Libya
@@ -16,10 +16,10 @@ Sum up Monday 23 November 2026's world news in one image. A flat 2D front page, 
 
 ```sh
 python3 main.py
-# wrote /output/entry.png (818268 bytes, 1024x1024)
+# wrote /output/entry.png: 818268 bytes, 1024x1024 PNG
 ```
 
-`main.py` (Python 3.13, stdlib only, no network) copies `entry.png` from the repo root to `/output/entry.png`, byte-for-byte, and validates that the output is a 1024x1024 PNG of at most 1 MiB. Two runs produce identical bytes (sha256 `d21ca73952a43fd69ba8c5595e10f254779dff01c137af6d315f2027c5b6e605`).
+`main.py` (Python 3.13, standard library only, no network) copies `entry.png` into `/output/entry.png` without re-encoding it, then verifies the copy is a 1024x1024 PNG under 1 MiB. Run it twice and the bytes agree (sha256 `d21ca73952a43fd69ba8c5595e10f254779dff01c137af6d315f2027c5b6e605`).
 
 ---
 
